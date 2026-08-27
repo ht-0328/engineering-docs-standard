@@ -7,6 +7,10 @@
 
 サイトは外部への通信を一切行わない。Mermaid は `tools/vendor/mermaid.min.js`
 を同梱する。書体は閲覧環境のものを使う。
+
+`tools/vendor/` は再取得できるため Git で追跡していない。サイトを作る前に
+一度だけ `bash tools/fetch_vendor.sh` を実行する。実行していない場合、図は
+記法のまま表示される。
 """
 
 from __future__ import annotations
@@ -378,6 +382,8 @@ def build() -> int:
         (SITE / "assets" / "mermaid.min.js").write_text(
             "/* mermaid.min.js が tools/vendor に無い。図は描画されない。 */\n", encoding="utf-8"
         )
+        print("警告: tools/vendor/mermaid.min.js が無い。図は記法のまま表示される。")
+        print("      先に `bash tools/fetch_vendor.sh` を実行すること。")
 
     if DIAGRAMS.exists():
         shutil.copytree(DIAGRAMS, SITE / "diagrams", dirs_exist_ok=True)

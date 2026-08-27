@@ -93,12 +93,21 @@ bash tools/export_diagrams.sh
 
 ### サイトを作って見る
 
+図の描画に使う Mermaid を先に取得する。クローン直後に一度だけ実行する。
+
+```bash
+bash tools/fetch_vendor.sh
+```
+
+そのうえでサイトを作り、開く。
+
 ```bash
 docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py
 python3 -m http.server 8765 --directory site
 ```
 
-`http://127.0.0.1:8765/` を開く。サイトは外部への通信を行わない。
+`http://127.0.0.1:8765/` を開く。**生成したサイトは外部への通信を行わない。**
+そのために、閲覧時ではなくビルド前に Mermaid を取得している。
 
 ## フォルダ構成
 
