@@ -1,0 +1,20 @@
+# 参考書のPDF原本。購入者ウォーターマーク（メールアドレス）を含むため追跡しない。
+references/*.pdf
+
+# PDFから抽出した本文。原本の複製にあたるため追跡しない。要約は research/notes/ に残す。
+research/extracted/
+
+# 生成物。docs/ と diagrams/src/ から再生成できる。
+site/
+diagrams/export/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 外部から取得した一次資料。再取得できるためGit管理しない。
+research/external-sources/
+
+# 同梱するライブラリ。tools/build_site.py が取得元を記録している。
+tools/vendor/
