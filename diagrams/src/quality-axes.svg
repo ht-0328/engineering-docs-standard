@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="900" height="420" role="img" aria-labelledby="title desc">
+  <title id="title">文書の品質を測る6つの軸</title>
+  <desc id="desc">良い文書は読者が用を足せる文書である。それを有用性、発見容易性、正確性、明確性、一貫性、保守性の6つの軸で見る。読みやすさは主に明確性の現れである。</desc>
+  <style>
+    :root, svg {
+      --bg: transparent;
+      --root-fill: #1a56db;
+      --root-text: #ffffff;
+      --card-fill: #eef2ff;
+      --card-stroke: #1a56db;
+      --card-text: #16223c;
+      --accent-fill: #fff4e5;
+      --accent-stroke: #c2410c;
+      --accent-text: #431407;
+      --line: #94a3b8;
+      --note: #475569;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root, svg {
+        --root-fill: #3b82f6;
+        --root-text: #08111f;
+        --card-fill: #16243d;
+        --card-stroke: #60a5fa;
+        --card-text: #dce7f7;
+        --accent-fill: #3a2412;
+        --accent-stroke: #fb923c;
+        --accent-text: #ffedd5;
+        --line: #64748b;
+        --note: #94a3b8;
+      }
+    }
+    .card { fill: var(--card-fill); stroke: var(--card-stroke); stroke-width: 1.5; }
+    .accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .root { fill: var(--root-fill); stroke: none; }
+    .line { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    text { font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif; }
+    .t-root { fill: var(--root-text); font-size: 15px; font-weight: 700; }
+    .t-num { fill: var(--card-text); font-size: 14px; font-weight: 700; }
+    .t-body { fill: var(--card-text); font-size: 12px; }
+    .t-anum { fill: var(--accent-text); font-size: 14px; font-weight: 700; }
+    .t-abody { fill: var(--accent-text); font-size: 12px; }
+    .t-note { fill: var(--note); font-size: 12px; font-style: italic; }
+  </style>
+
+  <path class="line" d="M450 84 V132 H110 V176"/>
+  <path class="line" d="M450 84 V132 H310 V176"/>
+  <path class="line" d="M450 84 V132 H510 V176"/>
+  <path class="line" d="M450 84 V132 H710 V176"/>
+  <path class="line" d="M110 250 V284 H210 V296"/>
+  <path class="line" d="M710 250 V284 H610 V296"/>
+
+  <rect class="root" x="340" y="24" width="220" height="60" rx="10"/>
+  <text class="t-root" x="450" y="48" text-anchor="middle">良い文書</text>
+  <text class="t-root" x="450" y="70" text-anchor="middle">= 読者が用を足せる</text>
+
+  <rect class="card" x="20" y="176" width="180" height="74" rx="8"/>
+  <text class="t-num"  x="36" y="202">1. 有用性</text>
+  <text class="t-body" x="36" y="224">読者の課題を</text>
+  <text class="t-body" x="36" y="242">解決するか</text>
+
+  <rect class="card" x="220" y="176" width="180" height="74" rx="8"/>
+  <text class="t-num"  x="236" y="202">2. 発見容易性</text>
+  <text class="t-body" x="236" y="224">必要な箇所に</text>
+  <text class="t-body" x="236" y="242">たどり着けるか</text>
+
+  <rect class="card" x="420" y="176" width="180" height="74" rx="8"/>
+  <text class="t-num"  x="436" y="202">3. 正確性</text>
+  <text class="t-body" x="436" y="224">事実として正しく</text>
+  <text class="t-body" x="436" y="242">検証できるか</text>
+
+  <rect class="accent" x="620" y="176" width="180" height="74" rx="8"/>
+  <text class="t-anum"  x="636" y="202">4. 明確性</text>
+  <text class="t-abody" x="636" y="224">一意に読めるか</text>
+  <text class="t-abody" x="636" y="242">← 読みやすさはここ</text>
+
+  <rect class="card" x="120" y="296" width="180" height="74" rx="8"/>
+  <text class="t-num"  x="136" y="322">5. 一貫性</text>
+  <text class="t-body" x="136" y="344">用語・構造・表記が</text>
+  <text class="t-body" x="136" y="362">ぶれないか</text>
+
+  <rect class="card" x="520" y="296" width="180" height="74" rx="8"/>
+  <text class="t-num"  x="536" y="322">6. 保守性</text>
+  <text class="t-body" x="536" y="344">更新され続けるか</text>
+
+  <text class="t-note" x="450" y="404" text-anchor="middle">「読みにくい」という指摘は、6軸のどれに当たるかを言うと直す場所が決まる</text>
+</svg>
