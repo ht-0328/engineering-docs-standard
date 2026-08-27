@@ -168,10 +168,10 @@ v2.4 時点では、バッチの並列実行に対応していない。
 
 | 対象 | 道具 | 実行 |
 |---|---|---|
-| 日本語の文書ルール | [tools/doc_lint.py](../tools/doc_lint.py) | `docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py` |
+| 日本語の文書ルール | [tools/doc_lint.py](../tools/doc_lint.py) | `docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py` |
 | Markdown の記法 | markdownlint（`SRC-WRITE-002` 6.2 の設定） | 編集環境の拡張機能、または `markdownlint-cli2` |
 | 図の書き出し | [tools/export_diagrams.sh](../tools/export_diagrams.sh) | `bash tools/export_diagrams.sh` |
-| サイトの生成 | [tools/build_site.py](../tools/build_site.py) | `docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py` |
+| サイトの生成 | [tools/build_site.py](../tools/build_site.py) | `docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py` |
 
 **自動チェックで判定できないこと**
 

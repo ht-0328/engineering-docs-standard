@@ -58,13 +58,13 @@ docker build -t edocs-tools -f tools/Dockerfile tools/
 ### 文書を検査する
 
 ```bash
-docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py
 ```
 
 特定のファイルだけを検査する場合は、パスを渡す。
 
 ```bash
-docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py docs/04-sentences.md
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py docs/04-sentences.md
 ```
 
 検査する内容は [.doclint.yml](.doclint.yml) に書いてある。ルールを変えるときはこのファイルを直す。
@@ -102,7 +102,7 @@ bash tools/fetch_vendor.sh
 そのうえでサイトを作り、開く。
 
 ```bash
-docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py
 python3 -m http.server 8765 --directory site
 ```
 

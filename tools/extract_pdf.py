@@ -3,7 +3,7 @@
 
 このスクリプトはDockerコンテナ内で実行する。ホストには何もインストールしない。
 
-    docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/extract_pdf.py
+    docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/extract_pdf.py
 
 対象のPDFは標準セキュリティハンドラで暗号化されているが、ユーザーパスワードは
 空である。つまり閲覧は自由で、印刷やコピーだけが制限されている。空文字で復号する。

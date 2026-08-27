@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """docs/ の Markdown から、静的HTMLサイトを生成する。
 
-    docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py
+    docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py
 
 正本は `docs/` の Markdown である。`site/` は生成物であり、直接編集しない。
 

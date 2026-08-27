@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """日本語の技術文書を機械的に検査する。
 
-    docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py
+    docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py
 
 検査するルールは `.doclint.yml` に書いてある。このスクリプトは、そこに書かれた
 ことを実行するだけである。ルールを変えるときは設定ファイルを直す。

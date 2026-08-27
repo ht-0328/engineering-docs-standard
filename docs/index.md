@@ -95,7 +95,7 @@ flowchart TD
 ## 検査の実行
 
 ```bash
-docker run --rm -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py
 ```
 
 作業用のイメージは次で作る。ホストには何もインストールしない。
