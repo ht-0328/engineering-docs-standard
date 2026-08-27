@@ -1,0 +1,233 @@
+# doc_lint の設定
+#
+# ここに書いてあることが、機械で検査できるルールのすべてである。
+# ルールを変えたいときは、このファイルを直す。tools/doc_lint.py は直さない。
+#
+# 各ルールには標準本文のルールIDを対応させている。
+# 対応先: docs/03-structure.md（C-xx）、docs/04-sentences.md（S-xx）、docs/05-presentation.md（P-xx）
+
+# 検査対象と除外
+target:
+  include:
+    - "docs/**/*.md"
+    - "templates/**/*.md"
+    - "README.md"
+  exclude:
+    - "research/**"          # 出典ノートは原文の引用を含むため検査しない
+    - "site/**"
+
+# 重大度ごとの終了コード制御
+severity:
+  fail_on: error             # error が1件でもあれば終了コード1
+
+rules:
+
+  # --- 文 ---
+
+  sentence_length:
+    enabled: true
+    doc_rule: S-02
+    warn_over: 50            # SRC-WRITE-003 2.3 の目安
+    error_over: 100          # 明らかに主題が複数ある水準
+    message: "一文が長い。主題が複数入っていないか確認する"
+
+  commas_per_sentence:
+    enabled: true
+    doc_rule: S-01
+    warn_over: 3             # 読点4つ以上は主題が複数ある兆候
+    message: "一文の読点が多い。主題が複数入っていないか確認する"
+
+  double_negative:
+    enabled: true
+    doc_rule: S-06
+    patterns:
+      - "ないと.*ない"
+      - "なければ.*ない"
+      - "なくはない"
+      - "ないことはない"
+    message: "二重否定になっている。肯定形に書き換える"
+
+  vague_words:
+    enabled: true
+    doc_rule: S-07
+    severity: warning
+    words:
+      - 適切に
+      - 適宜
+      - 必要に応じて
+      - 可能な限り
+      - 速やかに
+      - なるべく早く
+      - できるだけ早く
+      - 十分に
+      - 大量の
+      - 多数の
+      - 極力
+      - 原則として対応
+      - しっかりと
+      - きちんと
+    message: "曖昧な語。数値・固有名詞・日時に置き換える"
+
+  timeless:
+    enabled: true
+    doc_rule: B-05
+    severity: warning
+    words:
+      - 現在は
+      - 現時点では
+      - 今のところ
+      - 近日
+      - 将来的に
+      - 最新の
+      - 新しいバージョン
+    message: "時点に依存する語。日付か版数で書く"
+
+  # --- 表記 ---
+
+  open_in_hiragana:
+    enabled: true
+    doc_rule: S-12
+    severity: warning
+    # SRC-EXT-003（JTF日本語標準スタイルガイド 第4.0版）2.2.1 の「ひらがなで書く」一覧から、
+    # 誤検出が少ないものを選んでいる。
+    pairs:
+      予め: あらかじめ
+      尚: なお
+      但し: ただし
+      又は: または
+      若しくは: もしくは
+      更に: さらに
+      然し: しかし
+      即ち: すなわち
+      暫く: しばらく
+      凡そ: およそ
+      却って: かえって
+      寧ろ: むしろ
+      滅多に: めったに
+      最早: もはや
+      余程: よほど
+      度々: たびたび
+      折角: せっかく
+      出来る: できる
+      出来ます: できます
+      下さい: ください
+      何処: どこ
+      乃至: ないし
+      中々: なかなか
+    message: "JTFスタイルガイドはこの語をひらがなで書くよう定めている"
+
+  style_mixing:
+    enabled: true
+    doc_rule: S-13
+    # 本文の敬体・常体の混在を検出する。文書ごとに多数派を正とし、少数派を報告する。
+    min_sentences: 10        # これ未満の文書では判定しない
+    message: "文体が混在している。敬体か常体のどちらかに統一する"
+
+  heading_no_period:
+    enabled: true
+    doc_rule: C-02
+    message: "見出しの文末に句点（。）を付けない"
+
+  # --- 構造 ---
+
+  heading_level_skip:
+    enabled: true
+    doc_rule: C-03
+    message: "見出しの階層が飛んでいる"
+
+  heading_max_depth:
+    enabled: true
+    doc_rule: C-04
+    max_depth: 4
+    message: "見出しが深すぎる。文書の分割を検討する"
+
+  empty_section:
+    enabled: true
+    doc_rule: C-03
+    message: "見出しの直後に本文がない。走査する読者はここで内容を判断できない"
+
+  vague_heading:
+    enabled: true
+    doc_rule: C-02
+    severity: warning
+    words:
+      - その他
+      - 補足
+      - 詳細
+      - 備考
+      - 参考
+    message: "見出しから内容を予測できない。具体的に書く"
+
+  paragraph_sentences:
+    enabled: true
+    doc_rule: C-07
+    warn_over: 7             # SRC-EXT-001: 3〜5文が歓迎され、7文超は避けられる
+    message: "段落の文数が多い。トピックが複数入っていないか確認する"
+
+  list_items:
+    enabled: true
+    doc_rule: C-07
+    warn_over: 7             # SRC-WRITE-003 4.7: マジックナンバー7
+    message: "箇条書きの項目が多い。グループ化するか、絞る"
+
+  # --- 見せ方 ---
+
+  code_block_language:
+    enabled: true
+    doc_rule: P-04
+    message: "コードブロックに言語名が指定されていない"
+
+  link_text:
+    enabled: true
+    doc_rule: P-05
+    words:
+      - こちら
+      - ここ
+      - この記事
+      - このページ
+      - リンク
+      - click here
+    message: "リンク文字列から行き先が分からない"
+
+  bare_url_link:
+    enabled: true
+    doc_rule: P-05
+    severity: warning
+    message: "URLそのものをリンク文字列にしている。ページ名か内容の説明を使う"
+
+  table_cell_length:
+    enabled: true
+    doc_rule: P-02
+    warn_over: 2             # SRC-EXT-001: セルが2文を超えたら別の形式を検討
+    message: "表のセルに文章が多い。別の形式を検討する"
+
+  # --- 保守 ---
+
+  unresolved_marker:
+    enabled: true
+    doc_rule: B-05
+    words:
+      - TBD
+      - TODO
+      - FIXME
+      - "???"
+      - 未定(?!義)
+    message: "未解決の印が残っている"
+
+  broken_local_link:
+    enabled: true
+    doc_rule: P-05
+    message: "リンク先のファイルが存在しない"
+
+  # --- 用語の統一 ---
+
+  term_consistency:
+    enabled: true
+    doc_rule: S-10
+    # 同じ意味で使われる語のうち、1つを正とする。
+    # 左が正、右が検出対象。
+    canonical:
+      ユーザー: [ユーザ, エンドユーザ]
+      サーバー: [サーバ]
+      メモリー: [メモリ]
+    message: "用語が揺れている。1つに統一する"
