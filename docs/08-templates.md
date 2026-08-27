@@ -100,4 +100,4 @@
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py path/to/your-doc.md
 ```
 
-**ただし、検査を通ったことは品質の証明ではない。** 読者に合っているか、結論が妥当か、事実が正しいかは人間が判断する（[01-what-is-good.md](01-what-is-good.md#測れる品質と測れない品質)）。
+**ただし、検査を通ったことは品質の証明ではない。** 読者に合っているか、結論が妥当か、事実が正しいかは人間が判断する（[01-what-is-good.md](01-what-is-good.md#測れる品質と-測れない品質)）。

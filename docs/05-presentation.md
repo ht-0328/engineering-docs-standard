@@ -273,7 +273,7 @@ docker compose down -v
 
 **この標準では、markdownlint に加えて日本語固有の検査を [tools/doc_lint.py](../tools/doc_lint.py) で行う。** 文長、読点の数、文体の混在、曖昧語、ひらがな開き、用語の揺れなどである。
 
-**ただし、[01-what-is-good.md](01-what-is-good.md#測れる品質と測れない品質) に書いたとおり、チェッカーを通ったことは品質の証明ではない。**
+**ただし、[01-what-is-good.md](01-what-is-good.md#測れる品質と-測れない品質) に書いたとおり、チェッカーを通ったことは品質の証明ではない。**
 
 ---
 

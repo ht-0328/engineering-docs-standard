@@ -13,8 +13,6 @@
 
 出典が示している実例には出典IDを付けた。付いていないものは、この標準が作った例である。
 
-<!-- doclint-disable vague_words timeless double_negative link_text broken_local_link vague_heading unresolved_marker open_in_hiragana sentence_length commas_per_sentence style_mixing -->
-
 ---
 
 ## A-01 一文に主題が3つ入っている
@@ -618,8 +616,6 @@ v2.4 時点では、バッチの並列実行に対応していない。
 **なぜ良くなったか**: 色に意味を持たせるなら凡例が要る。ノード数の上限は `SRC-WRITE-002` 8.5.5 が10としている。
 
 **判断**: その図を消したとき、文章だけで同じことが伝わるなら、図は要らない。
-
-<!-- doclint-enable -->
 
 ---
 

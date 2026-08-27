@@ -19,7 +19,6 @@ import html
 import json
 import re
 import shutil
-import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -29,6 +28,8 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
+
+from mdslug import slugify
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
@@ -73,14 +74,6 @@ class Page:
     html: str = ""
     toc: list[tuple[int, str, str]] = field(default_factory=list)  # (level, id, text)
     search: list[dict] = field(default_factory=list)
-
-
-def slugify(text: str) -> str:
-    text = unicodedata.normalize("NFKC", text).strip().lower()
-    text = re.sub(r"[`*_\[\]()<>#!]", "", text)
-    text = re.sub(r"[\s、。・／/]+", "-", text)
-    text = re.sub(r"-{2,}", "-", text).strip("-")
-    return text or "section"
 
 
 def make_renderer() -> MarkdownIt:

@@ -3,8 +3,12 @@
 # ここに書いてあることが、機械で検査できるルールのすべてである。
 # ルールを変えたいときは、このファイルを直す。tools/doc_lint.py は直さない。
 #
-# 各ルールには標準本文のルールIDを対応させている。
-# 対応先: docs/03-structure.md（C-xx）、docs/04-sentences.md（S-xx）、docs/05-presentation.md（P-xx）
+# 各ルールには標準本文のルールIDを対応させている。対応先は次のとおり。
+#   B-xx: docs/02-before-writing.md
+#   C-xx: docs/03-structure.md
+#   S-xx: docs/04-sentences.md
+#   P-xx: docs/05-presentation.md
+#   O-xx: docs/10-operations.md
 
 # 検査対象と除外
 target:
@@ -16,9 +20,9 @@ target:
     - "research/**"          # 出典ノートは原文の引用を含むため検査しない
     - "site/**"
 
-# 重大度ごとの終了コード制御
+# fail_on に指定した重大度「以上」が1件でもあれば、終了コード1で失敗する。
 severity:
-  fail_on: error             # error が1件でもあれば終了コード1
+  fail_on: error
 
 rules:
 
@@ -28,14 +32,15 @@ rules:
     enabled: true
     doc_rule: S-02
     warn_over: 50            # SRC-WRITE-003 2.3 の目安
-    error_over: 100          # 明らかに主題が複数ある水準
+    # 文の長さは目安であって違反ではない（docs/01-what-is-good.md）。
+    # そのため error にする閾値は持たない。どれだけ長くても warning である。
     message: "一文が長い。主題が複数入っていないか確認する"
 
   commas_per_sentence:
     enabled: true
-    doc_rule: S-01
+    doc_rule: S-14
     warn_over: 3             # 読点4つ以上は主題が複数ある兆候
-    message: "一文の読点が多い。主題が複数入っていないか確認する"
+    message: "一文の読点が多い。係り受けが一意か確認する"
 
   double_negative:
     enabled: true
@@ -51,35 +56,47 @@ rules:
     enabled: true
     doc_rule: S-07
     severity: warning
+    # docs/04-sentences.md S-07 と docs/appendix-glossary.md「使わない語」に
+    # 挙げた語をすべて含める。3か所の語彙は同じでなければならない。
     words:
       - 適切に
       - 適宜
       - 必要に応じて
       - 可能な限り
       - 速やかに
+      - 早めに
       - なるべく早く
       - できるだけ早く
       - 十分に
       - 大量の
       - 多数の
+      - 一部の
       - 極力
-      - 原則として対応
       - しっかりと
       - きちんと
+      - なるはや
+      - 巻き取
+      - エビデンス
     message: "曖昧な語。数値・固有名詞・日時に置き換える"
 
   timeless:
     enabled: true
-    doc_rule: B-05
+    doc_rule: O-03
     severity: warning
+    # docs/10-operations.md O-03 の表と同じ語を並べる。
     words:
       - 現在は
       - 現時点では
       - 今のところ
-      - 近日
+      - 現状では
+      - 今後
       - 将来的に
+      - 近日
+      - まもなく
       - 最新の
       - 新しいバージョン
+      - 従来の
+      - 以前は
     message: "時点に依存する語。日付か版数で書く"
 
   # --- 表記 ---
@@ -88,8 +105,8 @@ rules:
     enabled: true
     doc_rule: S-12
     severity: warning
-    # SRC-EXT-003（JTF日本語標準スタイルガイド 第4.0版）2.2.1 の「ひらがなで書く」一覧から、
-    # 誤検出が少ないものを選んでいる。
+    # SRC-EXT-003（JTF日本語標準スタイルガイド 第4.0版）2.2.1 の「ひらがなで書く」
+    # 一覧から、誤検出が少ないものを選んでいる。
     pairs:
       予め: あらかじめ
       尚: なお
@@ -120,8 +137,15 @@ rules:
     enabled: true
     doc_rule: S-13
     # 本文の敬体・常体の混在を検出する。文書ごとに多数派を正とし、少数派を報告する。
+    # 体言止めと断片は判定しない。無理に常体へ寄せると誤検出が増える。
     min_sentences: 10        # これ未満の文書では判定しない
-    message: "文体が混在している。敬体か常体のどちらかに統一する"
+    message: "本文の文体が混在している。敬体か常体のどちらかに統一する"
+
+  list_style_mixing:
+    enabled: true
+    doc_rule: S-13
+    # SRC-EXT-003 1.1.3「ひとまとまりの箇条書きでは、敬体と常体を混在させません」
+    message: "ひとまとまりの箇条書きの中で文体が混在している"
 
   heading_no_period:
     enabled: true
@@ -129,6 +153,11 @@ rules:
     message: "見出しの文末に句点（。）を付けない"
 
   # --- 構造 ---
+
+  single_h1:
+    enabled: true
+    doc_rule: C-03
+    message: "h1 は1ファイルに1つだけ置く"
 
   heading_level_skip:
     enabled: true
@@ -170,6 +199,23 @@ rules:
     warn_over: 7             # SRC-WRITE-003 4.7: マジックナンバー7
     message: "箇条書きの項目が多い。グループ化するか、絞る"
 
+  document_metadata:
+    enabled: true
+    doc_rule: C-08
+    # 独立した文書に、いつ・誰に・誰が・何のためかを持たせる。
+    # docs/ の本文は全体で1つの文書として扱い、メタ情報は docs/index.md が持つ。
+    # この判断は docs/index.md に書いてある。
+    paths:
+      - "templates/"
+      - "README.md"
+      - "docs/index.md"
+    within_lines: 40
+    require:
+      - 保守責任者
+      - 最終確認日
+      - 想定読者
+    message: "冒頭のメタ情報が足りない"
+
   # --- 見せ方 ---
 
   code_block_language:
@@ -195,6 +241,28 @@ rules:
     severity: warning
     message: "URLそのものをリンク文字列にしている。ページ名か内容の説明を使う"
 
+  broken_local_link:
+    enabled: true
+    doc_rule: P-05
+    message: "リンク先のファイルが存在しない"
+
+  broken_anchor:
+    enabled: true
+    doc_rule: P-05
+    # アンカーの生成規則は tools/build_site.py の slugify と同じにしてある。
+    message: "リンク先に、その見出しが無い"
+
+  image_alt:
+    enabled: true
+    doc_rule: P-03
+    severity: warning
+    message: "画像に代替テキストが無い"
+
+  table_columns:
+    enabled: true
+    doc_rule: P-02
+    message: "表の列数がそろっていない"
+
   table_cell_length:
     enabled: true
     doc_rule: P-02
@@ -205,7 +273,7 @@ rules:
 
   unresolved_marker:
     enabled: true
-    doc_rule: B-05
+    doc_rule: O-07
     words:
       - TBD
       - TODO
@@ -214,20 +282,21 @@ rules:
       - 未定(?!義)
     message: "未解決の印が残っている"
 
-  broken_local_link:
-    enabled: true
-    doc_rule: P-05
-    message: "リンク先のファイルが存在しない"
-
   # --- 用語の統一 ---
 
   term_consistency:
     enabled: true
     doc_rule: S-10
-    # 同じ意味で使われる語のうち、1つを正とする。
-    # 左が正、右が検出対象。
-    canonical:
-      ユーザー: [ユーザ, エンドユーザ]
-      サーバー: [サーバ]
-      メモリー: [メモリ]
-    message: "用語が揺れている。1つに統一する"
+    # 同じ概念を指す表記のまとまりを列挙する。
+    # どれが正しいかは決めない。**1つの文書の中で混ざっていること**を検出する。
+    # 用語集（docs/appendix-glossary.md）は、既存文書が一方で統一されていれば
+    # それを尊重するとしている。常に片方を正とすると、統一済みの文書を誤検出する。
+    groups:
+      user:      [ユーザー, ユーザ, エンドユーザー, エンドユーザ]
+      server:    [サーバー, サーバ]
+      memory:    [メモリー, メモリ]
+      computer:  [コンピューター, コンピュータ]
+      driver:    [ドライバー, ドライバ]
+      folder:    [フォルダー, フォルダ]
+      printer:   [プリンター, プリンタ]
+    message: "同じ概念に2通りの表記が使われている"
