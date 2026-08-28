@@ -45,17 +45,26 @@ rules:
   double_negative:
     enabled: true
     doc_rule: S-06
+    ignore_in_quotes: true
+    # S-06 が問題にするのは、読者が否定を2回反転しないと行動を決められない文である。
+    # 「AがなければBも決まらない」のような依存関係の説明は対象外とする。
+    # そのため、2つ目の否定が可能・丁寧の形（ません、できない、られない）である
+    # 場合だけを検出する。**検出できるのは二重否定の一部だけである。**
     patterns:
-      - "ないと.*ない"
-      - "なければ.*ない"
+      - "ないと[^。]*(ません|できない|できません|られない|得ない|かねない)"
+      - "なければ[^。]*(ません|できない|できません|られない|得ない)"
       - "なくはない"
       - "ないことはない"
+      - "ないわけではない"
     message: "二重否定になっている。肯定形に書き換える"
 
   vague_words:
     enabled: true
     doc_rule: S-07
     severity: warning
+    # 「速やかに」のようにかぎかっこで囲まれた語は、その語を使っているのではなく
+    # その語について述べている。ルールの説明そのものが違反として報告されるのを防ぐ。
+    ignore_in_quotes: true
     # docs/04-sentences.md S-07 と docs/appendix-glossary.md「使わない語」に
     # 挙げた語をすべて含める。3か所の語彙は同じでなければならない。
     words:
@@ -83,6 +92,7 @@ rules:
     enabled: true
     doc_rule: O-03
     severity: warning
+    ignore_in_quotes: true
     # docs/10-operations.md O-03 の表と同じ語を並べる。
     words:
       - 現在は
@@ -201,7 +211,7 @@ rules:
 
   document_metadata:
     enabled: true
-    doc_rule: C-08
+    doc_rule: C-08  # 機密区分は B-07
     # 独立した文書に、いつ・誰に・誰が・何のためかを持たせる。
     # docs/ の本文は全体で1つの文書として扱い、メタ情報は docs/index.md が持つ。
     # この判断は docs/index.md に書いてある。
@@ -211,6 +221,8 @@ rules:
       - "docs/index.md"
     within_lines: 40
     require:
+      - 作成者
+      - 機密区分
       - 保守責任者
       - 最終確認日
       - 想定読者
@@ -246,6 +258,11 @@ rules:
     doc_rule: P-05
     message: "リンク先のファイルが存在しない"
 
+  undefined_reference:
+    enabled: true
+    doc_rule: P-05
+    message: "参照形式のリンクに定義が無い。角かっこのまま表示される"
+
   broken_anchor:
     enabled: true
     doc_rule: P-05
@@ -274,6 +291,7 @@ rules:
   unresolved_marker:
     enabled: true
     doc_rule: O-07
+    ignore_in_quotes: true
     words:
       - TBD
       - TODO

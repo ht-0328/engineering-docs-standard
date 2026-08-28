@@ -198,6 +198,19 @@ def strip_inline(text: str) -> str:
 
 LIST_MARKER = re.compile(r"^\s*([-*+]|\d+\.)\s+")
 
+# かぎかっこで囲まれた部分。語の「使用」ではなく「言及」であることが多い。
+QUOTED = re.compile(r"[「『][^」』]{0,40}[」』]")
+
+
+def drop_quoted(text: str) -> str:
+    """かぎかっこの中身を取り除く。
+
+    「速やかに」を使うな、と書いた文そのものが違反として報告されるのを防ぐ。
+    語を引用符で囲むのは、その語を使っているのではなく、その語について
+    述べているからである。
+    """
+    return QUOTED.sub("", text)
+
 
 def logical_units(block: Block) -> list[tuple[str, list[int]]]:
     """ブロックを論理単位へ分け、(本文, 各文字の行番号) を返す。
@@ -403,6 +416,7 @@ class Linter:
         self.check_tables(path, blocks)
         self.check_fences(path, blocks)
         self.check_links(path, lines)
+        self.check_reference_links(path, lines)
         self.check_images(path, lines)
         self.check_words(path, blocks)
         self.check_metadata(path, lines)
@@ -778,6 +792,42 @@ class Linter:
                                 clean,
                             )
 
+    def check_reference_links(self, path: Path, lines: list[str]) -> None:
+        """参照形式のリンク `[文字列][ref]` に、定義があるかを見る。
+
+        定義が無いと、Markdown はリンクにならず角かっこのまま表示される。
+        """
+        spec = self.rule("undefined_reference")
+        if not spec:
+            return
+
+        defined = set()
+        for raw in lines:
+            match = re.match(r"^\s{0,3}\[([^\]]+)\]:\s+\S", raw)
+            if match:
+                defined.add(match.group(1).strip().lower())
+
+        in_fence = False
+        for number, raw in enumerate(lines, start=1):
+            if re.match(r"^\s*(`{3,}|~{3,})", raw):
+                in_fence = not in_fence
+                continue
+            if in_fence or re.match(r"^\s{0,3}\[([^\]]+)\]:\s+\S", raw):
+                continue
+            stripped = re.sub(r"`[^`]*`", "", raw)
+            for label, ref in re.findall(r"(?<!!)\[([^\]]*)\]\[([^\]]*)\]", stripped):
+                key = (ref or label).strip().lower()
+                if key not in defined:
+                    self.add(
+                        spec,
+                        "undefined_reference",
+                        path,
+                        number,
+                        "error",
+                        f"参照 `[{ref or label}]` の定義が無い",
+                        label,
+                    )
+
     def check_images(self, path: Path, lines: list[str]) -> None:
         spec = self.rule("image_alt")
         if not spec:
@@ -824,8 +874,9 @@ class Linter:
                 ):
                     if not spec:
                         continue
+                    haystack = drop_quoted(text) if spec.get("ignore_in_quotes", True) else text
                     for word in spec.get("words", []):
-                        if word_pattern(word).search(text):
+                        if word_pattern(word).search(haystack):
                             self.add(
                                 spec,
                                 name,

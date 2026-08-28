@@ -3,6 +3,9 @@
 | 項目 | 内容 |
 |---|---|
 | これは何か | 質の高い技術文書を書き、レビューするための、根拠つきのルール集 |
+| 版 | 0.2.0（[変更履歴](CHANGELOG.md)） |
+| 作成者 | Claude（Opus 5）。分担は「この標準の作り方」を参照 |
+| 機密区分 | 公開可 |
 | 想定読者 | 設計書・手順書・報告書・議事録を書く人。および、それらをレビューする人 |
 | 読んだあとできること | 良い文書を書ける。レビューで「なぜダメか」と「どう直すか」を説明できる |
 | 保守責任者 | このリポジトリの保守担当 |
@@ -47,13 +50,30 @@
 
 ## 使い方
 
-検査も生成も Docker で完結する。ホストには何もインストールしない。
+必要なものを確認し、作業用のイメージを1回作れば、あとはすべて同じ形のコマンドで動く。
+
+### 必要なもの
+
+| 必要なもの | 用途 | 確認方法 |
+|---|---|---|
+| Docker | 検査・サイト生成・図の書き出しをすべて動かす | `docker --version` が版を表示する |
+| `bash` | `tools/` のスクリプトを動かす | 標準で入っている |
+| ネットワーク | イメージの作成と Mermaid の取得（各1回だけ） | — |
+| ホストの `python3` | **コード例の検証だけ**に使う。他の作業には要らない | `python3 --version` が版を表示する |
+
+**poppler も draw.io も Markdown の変換器も、ホストへは入れない。** すべて Docker の中で動く。
+
+**例外は [tools/verify_examples.py](tools/verify_examples.py) だけである。** このツールは Docker コマンドそのものを実行して確かめるため、コンテナの外から動かす必要がある。標準ライブラリだけで動くので、追加のインストールは要らない。
 
 ### 作業用のイメージを作る
+
+最初に1回だけ実行する。
 
 ```bash
 docker build -t edocs-tools -f tools/Dockerfile tools/
 ```
+
+**成功したとき**: 最後の行が `Successfully tagged edocs-tools:latest` になる。`docker images edocs-tools` で確認できる。
 
 ### 文書を検査する
 
@@ -61,11 +81,22 @@ docker build -t edocs-tools -f tools/Dockerfile tools/
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py
 ```
 
+**期待される出力**（末尾の2行）
+
+```text
+検査したファイル: 23
+error: 0  warning: 82  info: 0
+```
+
+**終了コード**: `error` が0件なら `0`、1件以上あれば `1` を返す。`warning` では失敗しない。
+
 特定のファイルだけを検査する場合は、パスを渡す。
 
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/doc_lint.py docs/04-sentences.md
 ```
+
+抑制している行数を確認する場合は `--report-suppressions` を付ける。
 
 検査する内容は [.doclint.yml](.doclint.yml) に書いてある。ルールを変えるときはこのファイルを直す。
 
@@ -83,10 +114,41 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python
 
 ルール名を書かずに `<!-- doclint-disable -->` とすると、すべてのルールを止める。1行だけなら `<!-- doclint-disable-next-line -->` を使う。
 
+**コードブロックと行内コードの中に書いた指示子は、指示として扱われない。** 上の説明そのものが検査を止めることはない。
+
+### コード例が実際に動くか確かめる
+
+文書に書いたコマンドを取り出して実行し、書いてある期待出力と照合する。
+**このツールだけはホストで動かす。** Docker コマンドそのものを確かめるためである。
+
+<!-- verify-examples: skip -->
+
+```bash
+python3 tools/verify_examples.py
+```
+
+**期待される出力**（末尾）
+
+```text
+検証したコマンド: 6
+成功: 6  失敗: 0  対象外: 0
+```
+
+**終了コード**: 失敗が0件なら `0`、1件以上あれば `1` を返す。
+`対象外` は、安全のため実行しないコマンドの件数である。
+`<!-- verify-examples: skip -->` を付けたブロック（サーバーの起動など）は、そもそも数えない。
+
 ### 図を書き出す
 
 ```bash
 bash tools/export_diagrams.sh
+```
+
+**期待される出力**（末尾）
+
+```text
+    176655 bytes  quality-axes-drawio.svg
+      4224 bytes  quality-axes.svg
 ```
 
 図の方式の使い分けは [docs/adr/ADR-001-diagram-tool.md](docs/adr/ADR-001-diagram-tool.md) に記録している。
@@ -99,19 +161,38 @@ bash tools/export_diagrams.sh
 bash tools/fetch_vendor.sh
 ```
 
-そのうえでサイトを作り、開く。
+**期待される出力**: `完了:` の行と `3572661 bytes`。取得済みなら `mermaid.min.js は取得済み（検証値が一致）` と出て何もしない。
+
+そのうえでサイトを作る。
 
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py
-python3 -m http.server 8765 --directory site
 ```
 
-`http://127.0.0.1:8765/` を開く。**生成したサイトは外部への通信を行わない。**
-そのために、閲覧時ではなくビルド前に Mermaid を取得している。
+**期待される出力**
+
+```text
+生成したページ: 14
+検索索引の項目: 227
+出力先: /w/site
+```
+
+開くときも Docker を使う。
+
+<!-- verify-examples: skip -->
+
+```bash
+docker run --rm -p 8765:8765 -v "$PWD/site:/site:ro" -w /site edocs-tools \
+  python -m http.server 8765 --bind 0.0.0.0
+```
+
+ブラウザで `http://127.0.0.1:8765/` を開く。止めるときは `Ctrl+C` を押す。
+
+**生成したサイトは外部への通信を行わない。** そのために、閲覧時ではなくビルド前に Mermaid を取得している。
 
 ## フォルダ構成
 
-```
+```text
 docs/                 標準の本文（Markdown が正本）
 docs/adr/             この標準自身の決定記録
 templates/            文書型ごとのテンプレート8種
@@ -121,6 +202,7 @@ research/notes/       書籍から抽出した一次ノート
 research/external/    公開標準の調査結果（URLと確認日つき）
 research/extracted/   PDFから抽出した本文（Git管理外）
 research/cross-reference.md   原則 × 出典の突き合わせ
+reviews/              独立レビューの記録
 tools/                検査・生成のためのスクリプト
 site/                 生成したHTML（Git管理外）
 references/           参考書のPDF（Git管理外）

@@ -11,7 +11,7 @@
 | ファイル | 用途 | 主たる文書型 | 構成の出典 |
 |---|---|---|---|
 | [readme.md](../templates/readme.md) | リポジトリの入口 | How-to | `SRC-EXT-005` |
-| [design-doc.md](../templates/design-doc.md) | 設計書 | Explanation | `SRC-EXT-006`（ADR）、`SRC-WRITE-004` |
+| [design-doc.md](../templates/design-doc.md) | 設計書 | Explanation | `SRC-EXT-006`（ADR）、`SRC-WRITE-004`。技術観点の節は**出典なし・運用上の取り決め** |
 | [api-spec.md](../templates/api-spec.md) | API仕様書 | Reference | `SRC-EXT-004` |
 | [runbook.md](../templates/runbook.md) | 運用手順書 | How-to | `SRC-WRITE-003` 5.3–5.8 |
 | [incident-report.md](../templates/incident-report.md) | 障害報告書 | Reference ＋ Explanation | `SRC-WRITE-003` 7.4–7.5 |
@@ -20,6 +20,8 @@
 | [research-report.md](../templates/research-report.md) | 調査報告 | Explanation | `SRC-WRITE-004` 3-1 |
 
 ## すべてのテンプレートに共通すること
+
+8種すべてが同じ形の冒頭表と、事実・推定を区別するラベルを持つ。
 
 ### 冒頭のメタ情報
 
@@ -32,6 +34,7 @@
 | 作成者 | 誰が書いたか。内容の責任を持つ | C-08 | **発信者名** |
 | 保守責任者 | 誰が古くならないよう見続けるか | B-05、O-02 | — |
 | 最終確認日 | いつ内容を確認したか | B-05、O-02 | — |
+| 機密区分 | どこまで共有してよいか | B-07 | — |
 | 想定読者（宛先） | 誰に向けた文書か | B-01 | **宛先** |
 | この文書を読んだあと読者ができること | 読後の行動 | B-02 | — |
 
@@ -69,6 +72,8 @@
 
 ## テンプレートを使うときの注意
 
+埋め方で迷いやすい3点を挙げる。空欄の扱い、削ってよい項目、記録の書き換えである。
+
 ### 空欄を残さない
 
 **`TBD`、`TODO`、`未定` を残さない（O-07）。** `doc_lint` がエラーとして報告する。
@@ -82,11 +87,12 @@
 
 **テンプレートの項目をすべて埋める必要はない。** 該当しない節は削る。
 
-ただし、次の6つは削らない。
+ただし、次の7つは削らない。
 
 - 想定読者（宛先）
 - 読後の行動
 - 作成者
+- 機密区分
 - 保守責任者
 - 最終確認日
 - 扱わないこと（該当する文書型の場合）
