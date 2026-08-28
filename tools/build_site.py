@@ -5,7 +5,11 @@
 
 正本は `docs/` の Markdown である。`site/` は生成物であり、直接編集しない。
 
-サイトは外部への通信を一切行わない。Mermaid は `tools/vendor/mermaid.min.js`
+サイトになるのは `docs/` の中だけである。本文から `../README.md` のように
+`docs/` の外を指すリンクは、飛び先がサイトに無い。そのため、GitHub の URL
+に差し替える。差し替え先は `REPO_URL` で決める。
+
+サイトは、表示のために外部へ通信しない。Mermaid は `tools/vendor/mermaid.min.js`
 を同梱する。書体は閲覧環境のものを使う。
 
 `tools/vendor/` は再取得できるため Git で追跡していない。サイトを作る前に
@@ -17,8 +21,10 @@ from __future__ import annotations
 
 import html
 import json
+import posixpath
 import re
 import shutil
+import urllib.parse
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -36,6 +42,16 @@ DOCS = ROOT / "docs"
 SITE = ROOT / "site"
 VENDOR = ROOT / "tools" / "vendor"
 DIAGRAMS = ROOT / "diagrams" / "export"
+
+# docs/ の外にあるファイル（README.md、CHANGELOG.md、templates/ など）は
+# サイトに含めない。そのままだとリンク先が無く、404 になる。
+# 代わりに、正本のリポジトリを見に行かせる。fork したときはここを変える。
+REPO_URL = "https://github.com/ht-0328/engineering-docs-standard"
+REPO_BRANCH = "main"
+
+# 本文で「良いリンク文」を説明するときに使う、飛び先のない例示。
+# そのままリンクにすると、押しても何も起きない。
+PLACEHOLDER_HREFS = {"...", "URL"}
 
 # サイドバーの並び。ここに無いファイルは末尾に回す。
 ORDER = [
@@ -107,17 +123,68 @@ def make_renderer() -> MarkdownIt:
     return md
 
 
-def rewrite_links(body: str) -> str:
-    """Markdown 同士のリンクを .html に、リポジトリ内のリンクを相対パスに直す。"""
+def drop_placeholder_links(body: str) -> str:
+    """飛び先のない例示リンクを、ただの文字にする。
+
+    `[こちら](...)` のような例は、リンク文の良し悪しを示すためのものである。
+    リンクのまま出すと、読者が押して 404 に飛ぶ。
+    """
+    pattern = "|".join(re.escape(h) for h in sorted(PLACEHOLDER_HREFS))
+    return re.sub(
+        rf'<a href="(?:{pattern})">(.*?)</a>',
+        r'<span class="link-example">\1</span>',
+        body,
+        flags=re.S,
+    )
+
+
+def repo_file(repo_path: str) -> Path:
+    """URL 上のパスを、手元のファイルの位置に戻す。"""
+    return ROOT / urllib.parse.unquote(repo_path)
+
+
+def repo_url(repo_path: str, anchor: str) -> str:
+    """リポジトリ内のパスを、GitHub で読める URL に直す。
+
+    `repo_path` と `anchor` は markdown-it が符号化したあとの文字列である。
+    ここで符号化し直すと `%` が二重になり、リンクが飛べなくなる。
+    """
+    kind = "tree" if repo_file(repo_path).is_dir() else "blob"
+    url = f"{REPO_URL}/{kind}/{REPO_BRANCH}/{repo_path}"
+    if anchor:
+        url += "#" + anchor
+    return url
+
+
+def rewrite_links(body: str, rel: str, warnings: list[str]) -> str:
+    """リンクを、サイトの中で飛べる形に直す。
+
+    docs/ の中を指すリンクは、拡張子を .html に替えるだけでよい。
+    docs/ の外を指すリンクは、サイトに実体が無いため、GitHub の URL にする。
+
+    `rel` は docs/ から見たこのページの位置である。`../` の解決に使う。
+    """
+    base = posixpath.dirname(rel)
 
     def repl(match: re.Match[str]) -> str:
         href = match.group(1)
         if re.match(r"^(https?:|mailto:|#)", href):
             return match.group(0)
         path, _, anchor = href.partition("#")
-        if path.endswith(".md"):
-            path = path[: -len(".md")] + ".html"
-        return f'href="{path}{"#" + anchor if anchor else ""}"'
+        if not path:
+            return match.group(0)
+
+        # docs/ から見た飛び先。docs/ の外に出ると `../` が残る。
+        inside_docs = posixpath.normpath(posixpath.join(base, path))
+        if not inside_docs.startswith("../"):
+            if path.endswith(".md"):
+                path = path[: -len(".md")] + ".html"
+            return f'href="{path}{"#" + anchor if anchor else ""}"'
+
+        repo_path = posixpath.normpath(posixpath.join("docs", base, path))
+        if not repo_file(repo_path).exists():
+            warnings.append(f"{rel}: リンク先がリポジトリに無い: {href}")
+        return f'href="{repo_url(repo_path, anchor)}"'
 
     return re.sub(r'href="([^"]+)"', repl, body)
 
@@ -322,6 +389,7 @@ def pager_html(pages: list[Page], index: int, current: Page) -> str:
 def build() -> int:
     md = make_renderer()
     pages = collect_pages()
+    link_warnings: list[str] = []
 
     for page in pages:
         text = page.source.read_text(encoding="utf-8")
@@ -329,7 +397,8 @@ def build() -> int:
         page.title = heading.group(1).strip() if heading else page.rel
 
         body = md.render(text)
-        body = rewrite_links(body)
+        body = drop_placeholder_links(body)
+        body = rewrite_links(body, page.rel, link_warnings)
         body = add_rule_badges(body)
         body = mark_examples(body)
         page.html = body
@@ -380,6 +449,9 @@ def build() -> int:
 
     if DIAGRAMS.exists():
         shutil.copytree(DIAGRAMS, SITE / "diagrams", dirs_exist_ok=True)
+
+    for warning in link_warnings:
+        print(f"警告: {warning}")
 
     print(f"生成したページ: {len(pages)}")
     print(f"検索索引の項目: {len(entries)}")
@@ -469,6 +541,13 @@ body {
 }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* 本文中の「リンクの例」。飛び先が無いので、押せないことが分かる見た目にする。 */
+.link-example {
+  color: var(--text-dim);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
 
 .skip { position: absolute; left: -999px; }
 .skip:focus { left: 1rem; top: 1rem; background: var(--bg-raised); padding: .5rem 1rem; z-index: 100; }
