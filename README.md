@@ -3,6 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | これは何か | 質の高い技術文書を書き、レビューするための、根拠つきのルール集 |
+| Webで読む | [公開サイト](https://ht-0328.github.io/engineering-docs-standard/)（検索・目次つき） |
 | 版 | 0.2.0（[変更履歴](CHANGELOG.md)） |
 | 作成者 | Claude（Opus 5）。分担は「この標準の作り方」を参照 |
 | 機密区分 | 公開可 |
@@ -19,7 +20,7 @@
 
 ## 何から読むか
 
-**本文は [docs/index.md](docs/index.md) から始まる。**
+**本文は [docs/index.md](docs/index.md) から始まる。** Web で読むなら [公開サイト](https://ht-0328.github.io/engineering-docs-standard/) が同じ内容である。**こちらは全文検索が使える。**
 
 | 目的 | 読むもの |
 |---|---|
@@ -154,6 +155,8 @@ bash tools/export_diagrams.sh
 図の方式の使い分けは [docs/adr/ADR-001-diagram-tool.md](docs/adr/ADR-001-diagram-tool.md) に記録している。
 
 ### サイトを作って見る
+
+**公開ずみのサイトを見るだけなら、この手順は要らない。** [公開サイト](https://ht-0328.github.io/engineering-docs-standard/) が `main` の内容をそのまま出している。手元で作るのは、公開前の変更を確かめるときである。
 
 図の描画に使う Mermaid を先に取得する。クローン直後に一度だけ実行する。
 
