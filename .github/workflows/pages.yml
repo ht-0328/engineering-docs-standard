@@ -1,0 +1,75 @@
+# docs/ の Markdown からサイトを作り、GitHub Pages で公開する。
+#
+# 公開先: https://ht-0328.github.io/engineering-docs-standard/
+#
+# 手順は README.md「サイトを作って見る」と同じものを、そのままなぞる。
+# 依存の版は tools/Dockerfile の一箇所だけに持たせたいため、CI でも Docker を使う。
+# ここに pip install を並べると、同じ一覧が二箇所に分かれて、いずれ食い違う。
+#
+# この workflow を動かす前に、リポジトリの Settings > Pages で
+# Source を「GitHub Actions」にしておくこと。設定しないと最後の配信で失敗する。
+
+name: サイトを公開する
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 公開は一度に一つだけ動かす。走っているものは止めずに待つ。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: サイトを作る
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得する
+        uses: actions/checkout@v7
+
+      - name: 道具のイメージを作る
+        run: docker build -t edocs-tools -f tools/Dockerfile tools/
+
+      # 図を描く Mermaid を先に取り込む。これを飛ばすと build_site.py は
+      # 警告を出すだけで成功してしまい、図が記法のままのサイトが公開される。
+      - name: 同梱するライブラリを取得する
+        run: bash tools/fetch_vendor.sh
+
+      # エラーが1件でもあれば、ここで止まる。警告では止まらない。
+      - name: 文書を検査する
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w \
+            edocs-tools python tools/doc_lint.py
+
+      # --user を付けないと site/ の所有者が root になり、次の収集で失敗する。
+      - name: サイトを作る
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w \
+            edocs-tools python tools/build_site.py
+
+      - name: Pages の設定を読み込む
+        uses: actions/configure-pages@v6
+
+      - name: 成果物を渡す
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    name: サイトを配る
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 公開する
+        id: deployment
+        uses: actions/deploy-pages@v5
