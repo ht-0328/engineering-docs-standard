@@ -12,6 +12,11 @@
 
 ### 追加
 
+- 比較用の Zensical 版を公開した。<https://ht-0328.github.io/engineering-docs-standard/zensical/>
+  - 内容は本編と同じである。**正本は本編のサイトである。**
+  - 比較用であることの断り書きと、検索避けを入れている。
+  - 決め方と、公開をやめる時期は `docs/adr/ADR-002-site-generator.md` にある。
+
 - `zensical.toml` と `tools/build_site_zensical.py` — 同じ `docs/` から [Zensical](https://zensical.org/) でもサイトを作れるようにした
 - `tools/Dockerfile.zensical` — Zensical 版の作業用イメージ
 - `docs/adr/ADR-002-site-generator.md` — 二本立てにする理由と、測って分かった違いの記録
