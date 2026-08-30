@@ -13,10 +13,16 @@
 [project]
 site_name = "エンジニアのためのドキュメント標準"
 site_description = "質の高い技術文書を書き、レビューするための、根拠つきのルール集"
-site_url = "https://ht-0328.github.io/engineering-docs-standard/"
+# 本編とは別の場所に出す。比べるあいだだけ、同じ内容を2つ公開する。
+# 理由は docs/adr/ADR-002-site-generator.md にある。
+site_url = "https://ht-0328.github.io/engineering-docs-standard/zensical/"
 
 repo_url = "https://github.com/ht-0328/engineering-docs-standard"
 repo_name = "ht-0328/engineering-docs-standard"
+
+# すべてのページの下に出る。深い階層から入った読者にも、
+# これが比較用であることと、本編の場所が分かるようにする。
+copyright = 'これは比較用の Zensical 版である。正本は <a href="https://ht-0328.github.io/engineering-docs-standard/">本編のサイト</a> にある。'
 
 docs_dir = "build/zensical"
 site_dir = "site-zensical"
