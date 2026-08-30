@@ -1,0 +1,16 @@
+# Zensical 版の作業用イメージ。ホストには何もインストールしない。
+# 用途: docs/ の Markdown から、Zensical で静的サイトを生成する。
+#
+#   docker build -t edocs-zensical -f tools/Dockerfile.zensical tools/
+#
+# 既存の tools/Dockerfile とは別にしている。Zensical は Rust の実行体を含み、
+# 依存も重なりが少ない。一つのイメージにまとめると、既存の検査・生成が
+# Zensical の都合で壊れる。比べている間は、二つに分けておく。
+FROM python:3.14-slim-trixie
+
+# 版を固定する。上げるときは、この行と README の記述を同時に書き換える。
+# 0.0.57 時点の Zensical は Alpha である。PyPI の分類が
+# "Development Status :: 3 - Alpha" を示している。
+RUN pip install --no-cache-dir zensical==0.0.57
+
+WORKDIR /w

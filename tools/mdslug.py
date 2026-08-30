@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from typing import Callable
 
 # 取り除く記号。NFKC 正規化のあとに適用するため、全角のかっこも ASCII になっている。
 _DROP = re.compile(r"[`*_\[\]()<>#!.,:;?'\"]")
@@ -42,3 +43,29 @@ def collect_anchors(lines: list[str]) -> set[str]:
         if heading:
             anchors.add(slugify(heading.group(1)))
     return anchors
+
+
+def slugify_for_toc(value: str, separator: str) -> str:
+    """Python-Markdown の toc 拡張が呼ぶ形に合わせた入口。
+
+    toc 拡張は `slugify(値, 区切り文字)` の形で呼ぶ。区切り文字は上の規則で
+    決めているため、受け取るが使わない。
+
+    モジュールの直下に置いている。Zensical が設定を pickle で保存するため、
+    関数の中で作った関数を渡すと「pickle できない」で止まる。
+    """
+    return slugify(value)
+
+
+def toc_slugify() -> Callable[[str, str], str]:
+    """toc 拡張に渡す関数を返す。
+
+    Zensical 版のサイト生成（tools/build_site_zensical.py）が使う。
+    Zensical は設定に書いた名前を「関数を作る関数」として呼ぶため、
+    `slugify_for_toc` をそのまま渡せない。ここで包んで返す。
+
+    ここを経由させると、Zensical 版のアンカーも doc_lint.py と同じ規則になる。
+    既定のままだと日本語の見出しが `_2` `_3` のような通し番号になり、
+    本文中の `#日本語の見出し` へのリンクがすべて切れる。
+    """
+    return slugify_for_toc

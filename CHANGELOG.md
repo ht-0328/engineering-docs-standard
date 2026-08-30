@@ -6,6 +6,28 @@
 
 ---
 
+## 未リリース
+
+サイト生成の道具を比べるための変更である。**標準の本文（ルール）は変えていない。**
+
+### 追加
+
+- `zensical.toml` と `tools/build_site_zensical.py` — 同じ `docs/` から [Zensical](https://zensical.org/) でもサイトを作れるようにした
+- `tools/Dockerfile.zensical` — Zensical 版の作業用イメージ
+- `docs/adr/ADR-002-site-generator.md` — 二本立てにする理由と、測って分かった違いの記録
+- `.github/workflows/zensical.yml` — Zensical 版が作れる状態を保つ確認。公開はしない
+- `.github/pull_request_template.md` — 変更提案の型
+
+### 変更
+
+- `tools/mdslug.py` に `toc_slugify` を足した。Zensical 版の見出しアンカーを、検査と同じ規則にするため
+- サイドバーの並びに ADR-002 を足した（`tools/build_site.py` と `zensical.toml`）
+- README の期待出力の数値を、いまの実行結果に合わせた
+
+**公開しているサイトは変わらない。** GitHub Pages に出るのは、いまも `tools/build_site.py` が作った `site/` である。
+
+---
+
 ## 0.2.0 — 2026-08-28
 
 **独立レビュー（Codex）の指摘に対応した版である。** 判定は `needs_changes` だった。記録は [reviews/2026-08-28-codex-review.md](reviews/2026-08-28-codex-review.md) にある。

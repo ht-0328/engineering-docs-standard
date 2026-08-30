@@ -85,8 +85,8 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python
 **期待される出力**（末尾の2行）
 
 ```text
-検査したファイル: 23
-error: 0  warning: 82  info: 0
+検査したファイル: 24
+error: 0  warning: 83  info: 0
 ```
 
 **終了コード**: `error` が0件なら `0`、1件以上あれば `1` を返す。`warning` では失敗しない。
@@ -131,8 +131,8 @@ python3 tools/verify_examples.py
 **期待される出力**（末尾）
 
 ```text
-検証したコマンド: 6
-成功: 6  失敗: 0  対象外: 0
+検証したコマンド: 8
+成功: 8  失敗: 0  対象外: 0
 ```
 
 **終了コード**: 失敗が0件なら `0`、1件以上あれば `1` を返す。
@@ -175,8 +175,8 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python
 **期待される出力**
 
 ```text
-生成したページ: 14
-検索索引の項目: 227
+生成したページ: 15
+検索索引の項目: 237
 出力先: /w/site
 ```
 
@@ -193,6 +193,49 @@ docker run --rm -p 8765:8765 -v "$PWD/site:/site:ro" -w /site edocs-tools \
 
 **生成したサイトは外部への通信を行わない。** そのために、閲覧時ではなくビルド前に Mermaid を取得している。
 
+### Zensical 版のサイトを作って見る（試験中）
+
+同じ `docs/` から、[Zensical](https://zensical.org/) でもサイトを作れるようにした。
+**既存の生成と入れ替えたわけではない。** どちらを残すかを決めるために、並べて比べている。
+公開しているサイトは、いまも `tools/build_site.py` が作ったものである。
+
+違いと理由は [ADR-002](docs/adr/ADR-002-site-generator.md) にまとめた。
+
+作業用のイメージは、既存のものとは別に作る。最初に1回だけ実行する。
+
+```bash
+docker build -t edocs-zensical -f tools/Dockerfile.zensical tools/
+```
+
+そのうえでサイトを作る。Mermaid の取得（`bash tools/fetch_vendor.sh`）は先に済ませておく。
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-zensical python tools/build_site_zensical.py
+```
+
+**期待される出力**（末尾の2行）
+
+```text
+生成したページ: 15
+出力先: /w/site-zensical
+```
+
+**終了コード**: 生成できれば `0`。`--strict` を付けると、警告が1件でもあれば `1` を返す。
+
+開くときは、出力先だけ替えて既存と同じ手順を使う。
+
+<!-- verify-examples: skip -->
+
+```bash
+docker run --rm -p 8766:8766 -v "$PWD/site-zensical:/site:ro" -w /site edocs-zensical \
+  python -m http.server 8766 --bind 0.0.0.0
+```
+
+`build/zensical/` は `docs/` の写しである。**直接編集しない。** 生成のたびに作り直す。
+`docs/` の外を指すリンクを GitHub の URL に書き換えるために、一度写している。
+
+`.cache/` は Zensical が差分で作り直すための控えである。**Zensical が中に `.gitignore` を置くため、Git には入らない。**
+
 ## フォルダ構成
 
 ```text
@@ -208,6 +251,8 @@ research/cross-reference.md   原則 × 出典の突き合わせ
 reviews/              独立レビューの記録
 tools/                検査・生成のためのスクリプト
 site/                 生成したHTML（Git管理外）
+build/zensical/       Zensical に渡す docs/ の写し（生成物・Git管理外）
+site-zensical/        Zensical が生成したHTML（Git管理外）
 references/           参考書のPDF（Git管理外）
 ```
 
