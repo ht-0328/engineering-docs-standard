@@ -1,0 +1,47 @@
+# Zensical 版のサイトが作れる状態を保つ。
+#
+# 公開はしない。公開は .github/workflows/pages.yml が行い、出すのは
+# tools/build_site.py が作った site/ である。ここは「壊れていないか」だけを見る。
+#
+# 手順は README.md「Zensical 版のサイトを作って見る（試験中）」と同じものをなぞる。
+# 二本立てにしている理由は docs/adr/ADR-002-site-generator.md にある。
+
+name: Zensical 版を確かめる
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Zensical 版のサイトを作る
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得する
+        uses: actions/checkout@v7
+
+      - name: 道具のイメージを作る
+        run: docker build -t edocs-zensical -f tools/Dockerfile.zensical tools/
+
+      # 図を描く Mermaid を先に取り込む。これを飛ばすと図が記法のまま出る。
+      - name: 同梱するライブラリを取得する
+        run: bash tools/fetch_vendor.sh
+
+      # --strict を付けると、警告が1件でもあれば失敗する。
+      # リンク切れと見出しアンカーの食い違いを、ここで止めるためである。
+      - name: サイトを作る
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w \
+            edocs-zensical python tools/build_site_zensical.py --strict
+
+      # 見た目を目で比べられるように、成果物を残す。公開はしない。
+      # Mermaid も含めて残す。落として開いたときに、図がそのまま描けるようにする。
+      - name: 成果物を残す
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-zensical
+          path: site-zensical
+          retention-days: 14

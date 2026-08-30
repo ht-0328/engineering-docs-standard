@@ -69,6 +69,7 @@ ORDER = [
     "appendix-checklist.md",
     "appendix-glossary.md",
     "adr/ADR-001-diagram-tool.md",
+    "adr/ADR-002-site-generator.md",
 ]
 
 SECTIONS = [
@@ -77,7 +78,15 @@ SECTIONS = [
     ("書き方", ["03-structure.md", "04-sentences.md", "05-presentation.md"]),
     ("レビュー", ["06-review.md", "07-antipatterns.md"]),
     ("実践", ["08-templates.md", "09-your-instincts.md", "10-operations.md"]),
-    ("付録", ["appendix-checklist.md", "appendix-glossary.md", "adr/ADR-001-diagram-tool.md"]),
+    (
+        "付録",
+        [
+            "appendix-checklist.md",
+            "appendix-glossary.md",
+            "adr/ADR-001-diagram-tool.md",
+            "adr/ADR-002-site-generator.md",
+        ],
+    ),
 ]
 
 

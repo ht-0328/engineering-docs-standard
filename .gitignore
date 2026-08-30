@@ -8,6 +8,11 @@ research/extracted/
 site/
 diagrams/export/
 
+# Zensical 版の生成物。build/ は docs/ の写しで、site-zensical/ はその出力である。
+# どちらも tools/build_site_zensical.py が作り直す。
+build/
+site-zensical/
+
 # Python
 __pycache__/
 *.pyc
