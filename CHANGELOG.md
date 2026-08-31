@@ -36,7 +36,7 @@
 - `research/external/SRC-AIEXT-001.md` から `009.md` — 公開仕様・研究・ベンダー文書の調査
 - `research/cross-reference-ai.md` — 別冊の原則 × 出典の突き合わせ
 - `docs/adr/ADR-003-ai-volume.md` — **なぜ本編に足さず別冊にしたか**の決定記録
-- `reviews/2026-08-31-ai-volume-review.md` — 独立レビューの記録。**2者から計44件の指摘を受け、43件を直した**
+- `reviews/2026-08-31-ai-volume-review.md` — 独立レビューの記録。**2者から計79件の指摘を受け、78件を直した**
 
 ### 変更（本編側）
 
