@@ -28,6 +28,8 @@ Markdown の解析には既存の部品を使う。**ページの組み立て、
 | 自作 | `tools/build_site.py` | `site/` | 公開しているのはこちら |
 | Zensical | `tools/build_site_zensical.py` | `site-zensical/` | 比べるために置く |
 
+**AI向けの別冊（`docs-ai/`）は、Zensical 版の対象外である。** 比較用の試験に、二重の生成物を足す理由が無い。決めた経緯は [ADR-003](ADR-003-ai-volume.md) にある。
+
 **公開の流れは変えない。** GitHub Pages に出るのは `site/` のままである。
 
 ## 理由

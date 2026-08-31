@@ -1,6 +1,7 @@
-# docs/ の Markdown からサイトを作り、GitHub Pages で公開する。
+# docs/ と docs-ai/ の Markdown からサイトを作り、GitHub Pages で公開する。
 #
 # 公開先: https://ht-0328.github.io/engineering-docs-standard/
+# AI向けの別冊: https://ht-0328.github.io/engineering-docs-standard/ai/
 #
 # 手順は README.md「サイトを作って見る」と同じものを、そのままなぞる。
 # 依存の版は tools/Dockerfile の一箇所だけに持たせたいため、CI でも Docker を使う。
@@ -49,10 +50,12 @@ jobs:
             edocs-tools python tools/doc_lint.py
 
       # --user を付けないと site/ の所有者が root になり、次の収集で失敗する。
+      # --all は本編と AI向けの別冊の両方を作る。別冊は site/ai/ に出る。
+      # 本編が site/ を作り直すため、別冊は必ずその後に作る。--all がその順序を守る。
       - name: サイトを作る
         run: |
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w \
-            edocs-tools python tools/build_site.py
+            edocs-tools python tools/build_site.py --all
 
       - name: Pages の設定を読み込む
         uses: actions/configure-pages@v6

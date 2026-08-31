@@ -9,12 +9,21 @@
 #   S-xx: docs/04-sentences.md
 #   P-xx: docs/05-presentation.md
 #   O-xx: docs/10-operations.md
+#
+# AI向けの別冊（docs-ai/）のルールIDは次のとおり。
+#   AD-xx: docs-ai/02-ai-readable-docs.md
+#   AN-xx: docs-ai/03-instructions.md
+#   AK-xx: docs-ai/04-skills-and-agents.md
+#   AH-xx: docs-ai/05-both-readers.md
+#   AV-xx: docs-ai/06-verifying-ai-writing.md
 
 # 検査対象と除外
 target:
   include:
     - "docs/**/*.md"
+    - "docs-ai/**/*.md"
     - "templates/**/*.md"
+    - "templates-ai/**/*.md"
     - "README.md"
   exclude:
     - "research/**"          # 出典ノートは原文の引用を含むため検査しない
@@ -217,8 +226,10 @@ rules:
     # この判断は docs/index.md に書いてある。
     paths:
       - "templates/"
+      - "templates-ai/"
       - "README.md"
       - "docs/index.md"
+      - "docs-ai/index.md"
     within_lines: 40
     require:
       - 作成者
@@ -317,4 +328,10 @@ rules:
       driver:    [ドライバー, ドライバ]
       folder:    [フォルダー, フォルダ]
       printer:   [プリンター, プリンタ]
+      # AI向けの別冊（docs-ai/）で残すと決めた語と、言い換えると決めた語。
+      # どちらを使うかは docs-ai/appendix-loanwords.md にある。
+      # ここでは「1つの文書の中で混ざっていること」だけを検出する。
+      context_window: [文脈窓, コンテキストウィンドウ]
+      fabrication:    [作り話, ハルシネーション, 幻覚]
+      disclosure:     [段階的な開示, プログレッシブディスクロージャー]
     message: "同じ概念に2通りの表記が使われている"

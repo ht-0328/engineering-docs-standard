@@ -39,6 +39,7 @@ nav = [
       "appendix-glossary.md",
       "adr/ADR-001-diagram-tool.md",
       "adr/ADR-002-site-generator.md",
+      "adr/ADR-003-ai-volume.md",
   ] },
 ]
 

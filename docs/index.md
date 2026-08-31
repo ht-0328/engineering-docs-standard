@@ -59,6 +59,7 @@ flowchart TD
 | [10 運用](10-operations.md) | docs as code、最終確認日、消すこと |
 | [ADR-001 図の作り方](adr/ADR-001-diagram-tool.md) | Mermaid / draw.io / 手書きSVG の使い分け |
 | [変更履歴](../CHANGELOG.md) | 版ごとの変更と、破壊的変更への対応 |
+| **[AIに読ませる文書の標準](../docs-ai/index.md)** | **別冊。** AIが読む文書、AIへの指示書、スキルと道具の説明文 |
 | [レビュー記録](../reviews/) | 独立レビューの判定と、未対応の指摘 |
 
 ## この標準の要点
