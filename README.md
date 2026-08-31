@@ -4,8 +4,9 @@
 |---|---|
 | これは何か | 質の高い技術文書を書き、レビューするための、根拠つきのルール集 |
 | Webで読む | [公開サイト](https://ht-0328.github.io/engineering-docs-standard/)（検索・目次つき） |
-| 比較用の版 | [Zensical 版](https://ht-0328.github.io/engineering-docs-standard/zensical/)（内容は同じ。試験中） |
-| 版 | 0.2.0（[変更履歴](CHANGELOG.md)） |
+| **AI向けの別冊** | **[AIに読ませる文書の標準](docs-ai/index.md)**（[公開サイト](https://ht-0328.github.io/engineering-docs-standard/ai/)） |
+| 比較用の版 | [Zensical 版](https://ht-0328.github.io/engineering-docs-standard/zensical/)（本編と内容は同じ。試験中） |
+| 版 | 本編 0.2.0 / 別冊 0.1.0（[変更履歴](CHANGELOG.md)） |
 | 作成者 | Claude（Opus 5）。分担は「この標準の作り方」を参照 |
 | 機密区分 | 公開可 |
 | 想定読者 | 設計書・手順書・報告書・議事録を書く人。および、それらをレビューする人 |
@@ -30,6 +31,7 @@
 | 悪い例と直し方を見たい | [docs/07-antipatterns.md](docs/07-antipatterns.md) |
 | いま書く文書の型がほしい | [templates/](templates/) |
 | 手元に1枚置きたい | [docs/appendix-checklist.md](docs/appendix-checklist.md) |
+| **AIに読ませる文書を書きたい** | **[docs-ai/index.md](docs-ai/index.md)（別冊）** |
 
 ## 何が根拠になっているか
 
@@ -49,6 +51,8 @@
 | `SRC-EXT-006` | RFC 2119 / 8174、ADR、Plain language |
 
 **どの原則を何出典が支持しているかの一覧は [research/cross-reference.md](research/cross-reference.md) にある。**
+
+**AI向けの別冊は、これとは別に13件の出典を持つ。** 書籍3冊、査読つき論文4件を含む研究、公開仕様、そして**自分で測った結果**である。一覧は [docs-ai/index.md](docs-ai/index.md#出典) に、突き合わせは [research/cross-reference-ai.md](research/cross-reference-ai.md) にある。
 
 ## 使い方
 
@@ -86,8 +90,8 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python
 **期待される出力**（末尾の2行）
 
 ```text
-検査したファイル: 24
-error: 0  warning: 83  info: 0
+検査したファイル: 41
+error: 0  warning: 143  info: 0
 ```
 
 **終了コード**: `error` が0件なら `0`、1件以上あれば `1` を返す。`warning` では失敗しない。
@@ -132,8 +136,8 @@ python3 tools/verify_examples.py
 **期待される出力**（末尾）
 
 ```text
-検証したコマンド: 8
-成功: 8  失敗: 0  対象外: 0
+検証したコマンド: 9
+成功: 9  失敗: 0  対象外: 0
 ```
 
 **終了コード**: 失敗が0件なら `0`、1件以上あれば `1` を返す。
@@ -176,9 +180,23 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python
 **期待される出力**
 
 ```text
-生成したページ: 15
-検索索引の項目: 237
+生成したページ: 16
+検索索引の項目: 247
 出力先: /w/site
+```
+
+AI向けの別冊も作る場合は `--all` を付ける。**別冊は `site/ai/` に出る。**
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/build_site.py --all
+```
+
+**期待される出力**（末尾の3行）
+
+```text
+生成したページ: 12
+検索索引の項目: 193
+出力先: /w/site/ai
 ```
 
 開くときも Docker を使う。
@@ -225,8 +243,8 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-zensical pyt
 **期待される出力**（末尾の3行）
 
 ```text
-生成したページ: 15
-検索避けを入れたページ: 16
+生成したページ: 16
+検索避けを入れたページ: 17
 出力先: /w/site-zensical
 ```
 
@@ -246,21 +264,50 @@ docker run --rm -p 8766:8766 -v "$PWD/site-zensical:/site:ro" -w /site edocs-zen
 
 `.cache/` は Zensical が差分で作り直すための控えである。**Zensical が中に `.gitignore` を置くため、Git には入らない。**
 
+### 独立レビューを投げる
+
+**レビューの結果は `reviews/` に置く。** 既存の [reviews/2026-08-28-codex-review.md](reviews/2026-08-28-codex-review.md) と同じ構成にまとめる。
+
+プロンプトはファイルとして保存しない。**本文を複製すると、直したそばから古くなる。** 毎回、いまの本文から組み立てる。
+
+<!-- verify-examples: skip -->
+
+```bash
+python3 tools/make_review_prompt.py 1 | codex exec --skip-git-repo-check \
+  --sandbox read-only -o reviews/2026-08-31-codex-raw-1.md -
+```
+
+引数は3つある。**レビュアーにファイルを読ませず、本文をプロンプトに埋め込んで渡す。**
+
+| 引数 | 渡す本文 | 見させること |
+|---|---|---|
+| `1` | 2章・3章 | 言い過ぎ、矛盾、自己規則違反、数値の不一致 |
+| `2` | 4章・5章・6章 | 同じ観点 |
+| `3` | 突き合わせ表・実験の記録 | 実験の結論がデータから言えるか。出典の数え方が一貫しているか |
+
+**Codex にファイルを読ませると返ってこないことがあった。** そのため本文を埋め込む形にしている。
+
+生の指摘（`*-codex-raw-*.md`）は、記録にまとめたあとで消す。
+
 ## フォルダ構成
 
 ```text
-docs/                 標準の本文（Markdown が正本）
+docs/                 本編の本文（Markdown が正本）
 docs/adr/             この標準自身の決定記録
+docs-ai/              AI向けの別冊の本文
 templates/            文書型ごとのテンプレート8種
+templates-ai/         AI向けのテンプレート4種
 diagrams/src/         図の正本（.mmd / .drawio / 手書き .svg）
 diagrams/export/      書き出したSVG（生成物）
 research/notes/       書籍から抽出した一次ノート
 research/external/    公開標準の調査結果（URLと確認日つき）
 research/extracted/   PDFから抽出した本文（Git管理外）
-research/cross-reference.md   原則 × 出典の突き合わせ
-reviews/              独立レビューの記録
-tools/                検査・生成のためのスクリプト
-site/                 生成したHTML（Git管理外）
+research/cross-reference.md   原則 × 出典の突き合わせ（本編）
+research/cross-reference-ai.md  同じもの（AI向けの別冊）
+research/experiments/ 自分で測った実験の材料・道具・結果
+reviews/              独立レビューの記録（結果はここに置く）
+tools/                検査・生成・レビュー用プロンプト組み立てのスクリプト
+site/                 生成したHTML（Git管理外）。別冊は site/ai/ に出る
 build/zensical/       Zensical に渡す docs/ の写し（生成物・Git管理外）
 site-zensical/        Zensical が生成したHTML（Git管理外）
 references/           参考書のPDF（Git管理外）
@@ -278,8 +325,26 @@ references/           参考書のPDF（Git管理外）
 
 **Codex と Antigravity の出力には、未検証の記述が含まれる可能性がある。** そのため、`research/notes/` の各ファイル冒頭にその旨を明記し、標準本文に載せた主張は原文で裏を取っている。
 
+### AI向けの別冊（0.1.0）での分担
+
+| 担当 | 作業 | 結果 |
+|---|---|---|
+| Claude（Opus 5） | 全体設計、Web の一次調査、原文での裏取り、実験の設計と実施、本文の執筆 | 完了 |
+| Antigravity（agy） | 公開仕様・研究の独立調査（URLと確認日の記録） | **完了。4件中3件** |
+| Codex | 書籍3冊の一次ノート | **未完了。45分で1件も返らず、作業を止めた** |
+| Codex | 実験での2つ目のモデルとしての回答 | 完了 |
+| Antigravity（agy） | **独立レビュー** | 完了。20件を指摘。**数値と集計の誤りに強かった** |
+| Codex | **独立レビュー** | **3本すべて完了**（いずれも大きく遅延）。59件を指摘。**論理の整合と、測った範囲を超えた主張の検出に強かった** |
+
+**Codex が書籍ノートを返さなかったため、Claude が抽出テキストを読んでノートを作った。** 各ノートの冒頭に、誰が作ったか、どこまで読んだかを書いている。**3冊とも全体は読んでいない。**
+
+この過程で、補助AIの出力に実際の誤りが出た。**隠さずに記録し、別冊の [06章](docs-ai/06-verifying-ai-writing.md) の根拠として使っている。** 記録は [research/experiments/SRC-AIEXP-002-build-log.md](research/experiments/SRC-AIEXP-002-build-log.md) にある。
+
+**2者の独立レビューで計79件の指摘を受け、78件を直した。** 2者の傾向ははっきり違った。Antigravity は出典の集計誤りを3か所、Codex は規則どうしが両立しない箇所を多く見つけた。**どちらか一方では見つからない指摘が両方にあった。** 判定と対応、および**残っている穴**は [reviews/2026-08-31-ai-volume-review.md](reviews/2026-08-31-ai-volume-review.md) にある。
+
 ## 制約
 
 - 参考書のPDFは購入者ウォーターマークを含むため、Git に入れない。長文の転載もしない。
 - 出典の無い主張は書かない。私見を書く場合は「出典なし・私見」と明記する。
 - 数値（50字、7項目、3階層など）はすべて単一出典に由来する。目安であって合否の基準ではない。
+- **AI向けの別冊の根拠は、本編より速く古くなる。** 別冊は再確認の期限（2027-02-28）を冒頭に持つ。

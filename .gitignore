@@ -23,3 +23,7 @@ research/external-sources/
 
 # 同梱するライブラリ。tools/build_site.py が取得元を記録している。
 tools/vendor/
+
+# 独立レビューの生出力。まとめたあとは残さない。
+# reviews/ に残すのは、判定と対応をまとめた記録だけである。
+reviews/*-raw-*.md

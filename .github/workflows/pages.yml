@@ -1,9 +1,11 @@
-# docs/ の Markdown からサイトを作り、GitHub Pages で公開する。
+# docs/ と docs-ai/ の Markdown からサイトを作り、GitHub Pages で公開する。
 #
 # 公開先: https://ht-0328.github.io/engineering-docs-standard/
+# AI向けの別冊: https://ht-0328.github.io/engineering-docs-standard/ai/
 # 比較用の Zensical 版: https://ht-0328.github.io/engineering-docs-standard/zensical/
 #
-# 正本は前者である。後者は、どちらの道具を残すか決めるあいだだけ置く。
+# 正本は最初のものである。Zensical 版は、どちらの道具を残すか決めるあいだだけ置く。
+# AI向けの別冊は Zensical 版の対象外である（docs/adr/ADR-003-ai-volume.md）。
 #
 # 手順は README.md「サイトを作って見る」と同じものを、そのままなぞる。
 # 依存の版は tools/Dockerfile の一箇所だけに持たせたいため、CI でも Docker を使う。
@@ -55,10 +57,12 @@ jobs:
             edocs-tools python tools/doc_lint.py
 
       # --user を付けないと site/ の所有者が root になり、次の収集で失敗する。
+      # --all は本編と AI向けの別冊の両方を作る。別冊は site/ai/ に出る。
+      # 本編が site/ を作り直すため、別冊は必ずその後に作る。--all がその順序を守る。
       - name: サイトを作る
         run: |
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w \
-            edocs-tools python tools/build_site.py
+            edocs-tools python tools/build_site.py --all
 
       # 比較用の Zensical 版も作る。出力は site/zensical/ に置いて一緒に配る。
       # 比べるあいだだけの措置である。理由と、やめる条件は

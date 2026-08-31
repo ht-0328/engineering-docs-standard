@@ -19,11 +19,13 @@
 
 from __future__ import annotations
 
+import argparse
 import html
 import json
 import posixpath
 import re
 import shutil
+import sys
 import urllib.parse
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -38,8 +40,6 @@ from pygments.util import ClassNotFound
 from mdslug import slugify
 
 ROOT = Path(__file__).resolve().parent.parent
-DOCS = ROOT / "docs"
-SITE = ROOT / "site"
 VENDOR = ROOT / "tools" / "vendor"
 DIAGRAMS = ROOT / "diagrams" / "export"
 
@@ -70,6 +70,7 @@ ORDER = [
     "appendix-glossary.md",
     "adr/ADR-001-diagram-tool.md",
     "adr/ADR-002-site-generator.md",
+    "adr/ADR-003-ai-volume.md",
 ]
 
 SECTIONS = [
@@ -85,9 +86,73 @@ SECTIONS = [
             "appendix-glossary.md",
             "adr/ADR-001-diagram-tool.md",
             "adr/ADR-002-site-generator.md",
+            "adr/ADR-003-ai-volume.md",
         ],
     ),
 ]
+
+# AI向けの別冊（docs-ai/）の並び。別冊にした理由は docs/adr/ADR-003-ai-volume.md にある。
+AI_ORDER = [
+    "index.md",
+    "01-how-ai-reads.md",
+    "02-ai-readable-docs.md",
+    "03-instructions.md",
+    "04-skills-and-agents.md",
+    "05-both-readers.md",
+    "06-verifying-ai-writing.md",
+    "07-antipatterns.md",
+    "08-templates.md",
+    "appendix-checklist.md",
+    "appendix-experiments.md",
+    "appendix-loanwords.md",
+]
+
+AI_SECTIONS = [
+    ("はじめに", ["index.md"]),
+    ("前提", ["01-how-ai-reads.md"]),
+    ("規則", [
+        "02-ai-readable-docs.md",
+        "03-instructions.md",
+        "04-skills-and-agents.md",
+        "05-both-readers.md",
+        "06-verifying-ai-writing.md",
+    ]),
+    ("実践", ["07-antipatterns.md", "08-templates.md"]),
+    ("付録", [
+        "appendix-checklist.md",
+        "appendix-experiments.md",
+        "appendix-loanwords.md",
+    ]),
+]
+
+# サイトの組み合わせ。引数を渡さなければ "main" を使う。**既定の動きは変えていない。**
+PROFILES: dict[str, dict] = {
+    "main": {
+        "docs": ROOT / "docs",
+        "site": ROOT / "site",
+        "order": ORDER,
+        "sections": SECTIONS,
+        "site_name": "エンジニアのためのドキュメント標準",
+        # 同じサイトの中にある別の版。リポジトリ上の場所を、サイト上の位置に対応させる。
+        # これが無いと、別冊へのリンクが GitHub に飛んでしまう。
+        "siblings": {"docs-ai": "ai"},
+    },
+    "ai": {
+        "docs": ROOT / "docs-ai",
+        "site": ROOT / "site" / "ai",
+        "order": AI_ORDER,
+        "sections": AI_SECTIONS,
+        "site_name": "AIに読ませる文書の標準",
+        # 別冊は site/ai/ に出る。本編は1つ上にある。
+        "siblings": {"docs": ".."},
+    },
+}
+
+# 実際に使う値。build() の冒頭で選んだプロファイルの値に差し替える。
+DOCS = PROFILES["main"]["docs"]
+SITE = PROFILES["main"]["site"]
+SITE_NAME = PROFILES["main"]["site_name"]
+SIBLINGS: dict[str, str] = PROFILES["main"]["siblings"]
 
 
 @dataclass
@@ -169,7 +234,8 @@ def rewrite_links(body: str, rel: str, warnings: list[str]) -> str:
     """リンクを、サイトの中で飛べる形に直す。
 
     docs/ の中を指すリンクは、拡張子を .html に替えるだけでよい。
-    docs/ の外を指すリンクは、サイトに実体が無いため、GitHub の URL にする。
+    同じサイトの中にある別の版（SIBLINGS）を指すリンクは、サイトの中で飛べる形にする。
+    それ以外で docs/ の外を指すリンクは、サイトに実体が無いため、GitHub の URL にする。
 
     `rel` は docs/ から見たこのページの位置である。`../` の解決に使う。
     """
@@ -190,7 +256,16 @@ def rewrite_links(body: str, rel: str, warnings: list[str]) -> str:
                 path = path[: -len(".md")] + ".html"
             return f'href="{path}{"#" + anchor if anchor else ""}"'
 
-        repo_path = posixpath.normpath(posixpath.join("docs", base, path))
+        repo_path = posixpath.normpath(posixpath.join(DOCS.name, base, path))
+
+        # 同じサイトの中にある別の版を指しているなら、サイトの中で飛べる形にする。
+        head, _, tail = repo_path.partition("/")
+        if head in SIBLINGS and tail.endswith(".md"):
+            depth = rel.count("/")
+            target = f"{SIBLINGS[head]}/{tail[: -len('.md')]}.html"
+            href_out = "../" * depth + target
+            return f'href="{href_out}{"#" + anchor if anchor else ""}"'
+
         if not repo_file(repo_path).exists():
             warnings.append(f"{rel}: リンク先がリポジトリに無い: {href}")
         return f'href="{repo_url(repo_path, anchor)}"'
@@ -343,7 +418,7 @@ PAGE_TEMPLATE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title} | エンジニアのためのドキュメント標準</title>
+<title>{title} | {site_name}</title>
 <link rel="stylesheet" href="{prefix}assets/style.css">
 </head>
 <body>
@@ -395,7 +470,20 @@ def pager_html(pages: list[Page], index: int, current: Page) -> str:
     return "".join(parts)
 
 
-def build() -> int:
+def build(profile: str = "main") -> int:
+    """サイトを1つ作る。`profile` は PROFILES の名前である。
+
+    引数を渡さなければ本編を作る。**既定の動きはプロファイル導入の前と同じである。**
+    """
+    global DOCS, SITE, ORDER, SECTIONS, SITE_NAME, SIBLINGS
+    config = PROFILES[profile]
+    DOCS = config["docs"]
+    SITE = config["site"]
+    ORDER = config["order"]
+    SECTIONS = config["sections"]
+    SITE_NAME = config["site_name"]
+    SIBLINGS = config["siblings"]
+
     md = make_renderer()
     pages = collect_pages()
     link_warnings: list[str] = []
@@ -426,6 +514,7 @@ def build() -> int:
         out.write_text(
             PAGE_TEMPLATE.format(
                 title=html.escape(page.title),
+                site_name=html.escape(SITE_NAME),
                 prefix=prefix,
                 nav=nav_html(pages, page),
                 body=page.html,
@@ -848,5 +937,34 @@ SCRIPT = """
 """
 
 
+def main(argv: list[str]) -> int:
+    """引数を読み、サイトを作る。
+
+        python tools/build_site.py            本編を site/ に作る
+        python tools/build_site.py --profile ai   別冊を site/ai/ に作る
+        python tools/build_site.py --all      本編と別冊の両方を作る
+    """
+    parser = argparse.ArgumentParser(description="docs/ の Markdown から静的サイトを作る")
+    parser.add_argument(
+        "--profile",
+        default="main",
+        choices=sorted(PROFILES),
+        help="作るサイト。既定は本編（main）",
+    )
+    parser.add_argument("--all", action="store_true", help="本編と別冊の両方を作る")
+    args = parser.parse_args(argv)
+
+    # 本編を先に作る。別冊の出力先 site/ai/ は site/ の中にあるため、
+    # 本編が site/ を作り直したあとに別冊を作らないと消える。
+    targets = ["main", "ai"] if args.all else [args.profile]
+    for name in targets:
+        if len(targets) > 1:
+            print(f"--- {name} ---")
+        code = build(name)
+        if code != 0:
+            return code
+    return 0
+
+
 if __name__ == "__main__":
-    raise SystemExit(build())
+    raise SystemExit(main(sys.argv[1:]))

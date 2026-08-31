@@ -5,6 +5,10 @@
 
     docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-tools python tools/extract_pdf.py
 
+引数にPDFのファイル名を渡すと、その本だけを処理する。追加した本だけを抽出するときに使う。
+
+    ... python tools/extract_pdf.py prompt-engineering-for-llms.pdf
+
 対象のPDFは標準セキュリティハンドラで暗号化されているが、ユーザーパスワードは
 空である。つまり閲覧は自由で、印刷やコピーだけが制限されている。空文字で復号する。
 
@@ -30,11 +34,17 @@ SRC_DIR = ROOT / "references"
 OUT_DIR = ROOT / "research" / "extracted"
 
 # 出典IDは triad-orchestrator/docs/knowledge/source-catalog.md の採番を継承する。
+#
+# SRC-WRITE-xxx は人向けの文書術を扱う本編（docs/）の出典である。
+# SRC-AI-xxx は AI 向けの別冊（docs-ai/）の出典である。番号は別に振る。
 SOURCE_IDS: dict[str, str] = {
     "effective-explanation-patterns.pdf": "SRC-WRITE-001",
     "practical-markdown-writing-for-it-engineers.pdf": "SRC-WRITE-002",
     "technical-writing-for-engineers-2nd-edition.pdf": "SRC-WRITE-003",
     "writing-techniques-for-engineers-revised-edition.pdf": "SRC-WRITE-004",
+    "prompt-engineering-for-llms.pdf": "SRC-AI-001",
+    "building-applications-with-ai-agents.pdf": "SRC-AI-002",
+    "generative-ai-design-patterns.pdf": "SRC-AI-003",
 }
 
 
@@ -101,9 +111,21 @@ def write_info(pdf_path: Path, out_path: Path, source_id: str, pages: int, fille
     out_path.write_text("\n".join(rows) + "\n", encoding="utf-8")
 
 
-def main() -> int:
+def main(argv: list[str]) -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    pdfs = sorted(SRC_DIR.glob("*.pdf"))
+
+    # 引数でPDFのファイル名を指定できる。指定が無ければ references/ の全部を処理する。
+    # 抽出ずみの本をやり直さずに、追加した本だけを処理するために使う。
+    if argv:
+        pdfs = [SRC_DIR / name for name in argv]
+        missing = [p for p in pdfs if not p.is_file()]
+        if missing:
+            for path in missing:
+                print(f"見つからない: {path}", file=sys.stderr)
+            return 1
+    else:
+        pdfs = sorted(SRC_DIR.glob("*.pdf"))
+
     if not pdfs:
         print(f"PDFが見つからない: {SRC_DIR}", file=sys.stderr)
         return 1
@@ -125,4 +147,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))
