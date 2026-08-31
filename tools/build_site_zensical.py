@@ -43,6 +43,20 @@ DIAGRAMS = ROOT / "diagrams" / "export"
 REPO_URL = "https://github.com/ht-0328/engineering-docs-standard"
 REPO_BRANCH = "main"
 
+# 本編のサイト。Zensical 版は比較用であり、正本ではない。
+# その旨を最初のページに入れるために使う。
+MAIN_SITE_URL = "https://ht-0328.github.io/engineering-docs-standard/"
+
+# 最初のページの見出しの直後に差し込む断り書き。
+# 写した側にだけ入れる。docs/ の正本は汚さない。
+NOTICE = f"""
+!!! warning "これは比較用の版である"
+
+    このページは Zensical で作っている。**正本は [本編のサイト]({MAIN_SITE_URL}) にある。**
+    どちらの道具を残すか決めるために、同じ内容を2つの方法で出している。
+    決め方は [ADR-002](adr/ADR-002-site-generator.md) にある。
+"""
+
 # `](../path)` または `](../path#anchor)` を拾う。`../` で始まるものだけを見る。
 # docs/ の中で閉じるリンクは Zensical が解決するため、触らない。
 LINK = re.compile(r"\]\((\.\./[^)\s]+)\)")
@@ -104,6 +118,20 @@ def replace(match: re.Match[str], base: str, rel: str, warnings: list[str]) -> s
     return f"]({repo_url(repo_path, anchor)})"
 
 
+def add_notice(text: str) -> str:
+    """最初の見出しの直後に、比較用であることの断り書きを入れる。
+
+    写した側にだけ入れる。`docs/` の正本には入れない。
+    すべてのページの下に出る断り書きは `zensical.toml` の `copyright` にある。
+    ここは、最初のページに大きく出すためのものである。
+    """
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines):
+        if line.startswith("# "):
+            return "".join(lines[: index + 1]) + NOTICE + "".join(lines[index + 1 :])
+    return NOTICE + text
+
+
 def stage() -> tuple[int, list[str]]:
     """docs/ を build/zensical/ に写し、リンクを書き換える。"""
     if BUILD.exists():
@@ -116,7 +144,10 @@ def stage() -> tuple[int, list[str]]:
         rel = source.relative_to(DOCS).as_posix()
         target = BUILD / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(rewrite_links(source.read_text(encoding="utf-8"), rel, warnings), encoding="utf-8")
+        body = rewrite_links(source.read_text(encoding="utf-8"), rel, warnings)
+        if rel == "index.md":
+            body = add_notice(body)
+        target.write_text(body, encoding="utf-8")
         count += 1
 
     assets = BUILD / "assets"
@@ -134,6 +165,27 @@ def stage() -> tuple[int, list[str]]:
         shutil.copytree(DIAGRAMS, BUILD / "diagrams", dirs_exist_ok=True)
 
     return count, warnings
+
+
+def add_noindex() -> int:
+    """生成したページに、検索避けの指示を入れる。
+
+    本編と Zensical 版は同じ内容である。両方が検索結果に出ると、
+    読者はどちらが正本か分からなくなる。**正本は本編の側である。**
+
+    robots.txt は使えない。GitHub Pages のプロジェクトサイトでは、
+    その置き場がドメインの直下にあり、このリポジトリからは触れない。
+    そのため、ページごとに指示を入れる。
+    """
+    tag = '<meta name="robots" content="noindex, nofollow">'
+    count = 0
+    for page in SITE.rglob("*.html"):
+        text = page.read_text(encoding="utf-8")
+        if tag in text or "<head>" not in text:
+            continue
+        page.write_text(text.replace("<head>", "<head>\n    " + tag, 1), encoding="utf-8")
+        count += 1
+    return count
 
 
 def main() -> int:
@@ -165,6 +217,7 @@ def main() -> int:
 
     pages = len(list(SITE.rglob("index.html")))
     print(f"生成したページ: {pages}")
+    print(f"検索避けを入れたページ: {add_noindex()}")
     print(f"出力先: {SITE}")
     return 0
 

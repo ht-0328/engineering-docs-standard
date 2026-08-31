@@ -5,6 +5,7 @@
 | これは何か | 質の高い技術文書を書き、レビューするための、根拠つきのルール集 |
 | Webで読む | [公開サイト](https://ht-0328.github.io/engineering-docs-standard/)（検索・目次つき） |
 | **AI向けの別冊** | **[AIに読ませる文書の標準](docs-ai/index.md)**（[公開サイト](https://ht-0328.github.io/engineering-docs-standard/ai/)） |
+| 比較用の版 | [Zensical 版](https://ht-0328.github.io/engineering-docs-standard/zensical/)（本編と内容は同じ。試験中） |
 | 版 | 本編 0.2.0 / 別冊 0.1.0（[変更履歴](CHANGELOG.md)） |
 | 作成者 | Claude（Opus 5）。分担は「この標準の作り方」を参照 |
 | 機密区分 | 公開可 |
@@ -214,10 +215,18 @@ docker run --rm -p 8765:8765 -v "$PWD/site:/site:ro" -w /site edocs-tools \
 ### Zensical 版のサイトを作って見る（試験中）
 
 同じ `docs/` から、[Zensical](https://zensical.org/) でもサイトを作れるようにした。
-**既存の生成と入れ替えたわけではない。** どちらを残すかを決めるために、並べて比べている。
-公開しているサイトは、いまも `tools/build_site.py` が作ったものである。
 
-違いと理由は [ADR-002](docs/adr/ADR-002-site-generator.md) にまとめた。
+| 項目 | 内容 |
+|---|---|
+| 公開先 | [Zensical 版](https://ht-0328.github.io/engineering-docs-standard/zensical/) |
+| 内容 | 本編と同じ。作った道具だけが違う |
+| 位置づけ | 比較用。**正本は本編のサイトである** |
+
+比べるあいだだけ、2つ出している。迷ったら本編を読む。
+
+Zensical 版には、比較用であることの断り書きを入れてある。検索結果にも出ないようにしている。
+
+違いと理由は [ADR-002](docs/adr/ADR-002-site-generator.md) にまとめた。手元で作るときは、次の手順を使う。
 
 作業用のイメージは、既存のものとは別に作る。最初に1回だけ実行する。
 
@@ -231,10 +240,11 @@ docker build -t edocs-zensical -f tools/Dockerfile.zensical tools/
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w edocs-zensical python tools/build_site_zensical.py
 ```
 
-**期待される出力**（末尾の2行）
+**期待される出力**（末尾の3行）
 
 ```text
-生成したページ: 15
+生成したページ: 16
+検索避けを入れたページ: 17
 出力先: /w/site-zensical
 ```
 

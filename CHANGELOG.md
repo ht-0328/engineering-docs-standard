@@ -13,6 +13,33 @@
 
 ---
 
+## 未リリース
+
+サイト生成の道具を比べるための変更である。**標準の本文（ルール）は変えていない。**
+
+### 追加
+
+- 比較用の Zensical 版を公開した。<https://ht-0328.github.io/engineering-docs-standard/zensical/>
+  - 内容は本編と同じである。**正本は本編のサイトである。**
+  - 比較用であることの断り書きと、検索避けを入れている。
+  - 決め方と、公開をやめる時期は `docs/adr/ADR-002-site-generator.md` にある。
+
+- `zensical.toml` と `tools/build_site_zensical.py` — 同じ `docs/` から [Zensical](https://zensical.org/) でもサイトを作れるようにした
+- `tools/Dockerfile.zensical` — Zensical 版の作業用イメージ
+- `docs/adr/ADR-002-site-generator.md` — 二本立てにする理由と、測って分かった違いの記録
+- `.github/workflows/zensical.yml` — Zensical 版が作れる状態を保つ確認。公開はしない
+- `.github/pull_request_template.md` — 変更提案の型
+
+### 変更
+
+- `tools/mdslug.py` に `toc_slugify` を足した。Zensical 版の見出しアンカーを、検査と同じ規則にするため
+- サイドバーの並びに ADR-002 を足した（`tools/build_site.py` と `zensical.toml`）
+- README の期待出力の数値を、いまの実行結果に合わせた
+
+**公開しているサイトは変わらない。** GitHub Pages に出るのは、いまも `tools/build_site.py` が作った `site/` である。
+
+---
+
 ## 別冊 0.1.0（2026-08-31）
 
 **AI向けの別冊を新しく作った。** 本編のルールは1つも変えていない。**破壊的変更は無い。**
@@ -56,28 +83,6 @@
 - **実験は1件しか実施できていない。** 指示書の長さと曖昧語の効果は測れていない
 - **04章の根拠は、大半がベンダーの公式文書である**
 - **再確認の期限は 2027-02-28 である。** 期限を過ぎた別冊は、読む前にまず疑う
-
----
-
-## 未リリース
-
-サイト生成の道具を比べるための変更である。**標準の本文（ルール）は変えていない。**
-
-### 追加
-
-- `zensical.toml` と `tools/build_site_zensical.py` — 同じ `docs/` から [Zensical](https://zensical.org/) でもサイトを作れるようにした
-- `tools/Dockerfile.zensical` — Zensical 版の作業用イメージ
-- `docs/adr/ADR-002-site-generator.md` — 二本立てにする理由と、測って分かった違いの記録
-- `.github/workflows/zensical.yml` — Zensical 版が作れる状態を保つ確認。公開はしない
-- `.github/pull_request_template.md` — 変更提案の型
-
-### 変更
-
-- `tools/mdslug.py` に `toc_slugify` を足した。Zensical 版の見出しアンカーを、検査と同じ規則にするため
-- サイドバーの並びに ADR-002 を足した（`tools/build_site.py` と `zensical.toml`）
-- README の期待出力の数値を、いまの実行結果に合わせた
-
-**公開しているサイトは変わらない。** GitHub Pages に出るのは、いまも `tools/build_site.py` が作った `site/` である。
 
 ---
 
